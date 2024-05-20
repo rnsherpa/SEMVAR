@@ -14,8 +14,15 @@ usage: SEM_variant_annotation [-h] [--file FILE] [--semsdir SEMSDIR]
 | --semsdir | Path to directory containing SEMs |
 | --assembly | Path to indexed reference genome |
 | --baselines | Path to file containing baseline values for each SEM |
-| --n_processes | Number of processes to use |
+| --n_processes | Number of processes to use for Python multiprocessing |
 | --outdir | Output path for variant annotations |
+
+Input variant list should have 5 columns (Check `example/variant_list/example_SNVs.tsv` for a properly formatted example):
+- `chrom`: Chromosome (e.g. chr1, chrX, etc.)
+- `start`: 0-based start position of variant
+- `end`: 0-based end position of variant
+- `ref`: Reference allele
+- `alt`: Alternate allele
 
 ## Example
 
