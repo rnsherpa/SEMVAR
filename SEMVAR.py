@@ -292,12 +292,12 @@ def get_spdi(chr_refseq_dict, chrom, start, ref, alt):
 if __name__ == "__main__":
 
     parser = ArgumentParser(prog='SEM_variant_annotation')
-    parser.add_argument('-f', '--file', help='BED file of variants')
-    parser.add_argument('-s', '--semsdir', help='Path to directory containing SEMs')
-    parser.add_argument('-a', '--assembly', help='Path to indexed reference genome')
-    parser.add_argument('-b', '--baselines', help='File containing all the baseline values')
-    parser.add_argument('-n', '--n_processes', type=int, help='Number of processes for multiprocessing')
-    parser.add_argument('-o', '--outdir', help='Output path of variant annotations')
+    parser.add_argument('--file', '-f', help='BED file of variants')
+    parser.add_argument('--semsdir', '-s', help='Path to directory containing SEMs')
+    parser.add_argument('--assembly', '-a', help='Path to indexed reference genome')
+    parser.add_argument('--baselines', '-b', help='File containing all the baseline values')
+    parser.add_argument('--n_processes', '-n', type=int, help='Number of processes for multiprocessing')
+    parser.add_argument('--outdir', '-o', help='Output path of variant annotations')
     args = parser.parse_args()
 
     variants_file = args.file
