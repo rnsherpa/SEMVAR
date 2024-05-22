@@ -24,7 +24,22 @@ Input variant list should have 5 columns (Check `example/variant_list/example_SN
 - `ref`: Reference allele
 - `alt`: Alternate allele
 
-## Example
+## Docker example usage (Recommended)
+
+Build docker image (Temporary until image hosted):
+
+`docker build -t semvar .`
+
+Run SEMVAR docker image:
+```
+docker run -it --rm \
+  -v example/variant_list/:/SEMVAR/variant_list \
+  -v path/to/indexed/reference:/SEMVAR/assembly \
+  -v example/example_annotations:/SEMVAR/output \
+  semvar -f /SEMVAR/variant_list/example_SNVs.tsv -s /SEMVAR/data/SEMs -a /SEMVAR/assembly/hg38.fa -b /SEMVAR/data/BASELINE/SEMs_baseline_norm.txt -n 1 -o /SEMVAR/output
+```
+
+## Conda example usage
 
 Set up conda environment:
 
@@ -32,5 +47,4 @@ Set up conda environment:
 
 Run SEMVAR with example variant list:
 
-`python SEMVAR.py -f example/variant_list/example_SNVs.tsv -s data/SEMs/ -a path/to/indexed/reference/hg38.fa -b data/BASELINE/SEMs_baseline_norm.txt -n 1 -o example/example_annotations`
-
+`python SEMVAR.py -f example/variant_list/example_SNVs.tsv -s data/SEMs -a path/to/indexed/reference/hg38.fa -b data/BASELINE/SEMs_baseline_norm.txt -n 1 -o example/example_annotations`
