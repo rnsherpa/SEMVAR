@@ -3,7 +3,7 @@
 ## Usage
 
 ```
-usage: SEM_variant_annotation [-h] [--file FILE] [--semsdir SEMSDIR]
+usage: python semvar.py [-h] [--file FILE] [--semsdir SEMSDIR]
                               [--assembly ASSEMBLY] [--baselines BASELINES]
                               [--n_processes N_PROCESSES] [--outdir OUTDIR]
 ```
