@@ -33,9 +33,9 @@ Build docker image (Temporary until image hosted):
 Run SEMVAR docker image:
 ```
 docker run -it --rm \
-  -v example/variant_list/:/SEMVAR/variant_list \
+  -v $(pwd)/example/variant_list:/SEMVAR/variant_list \
   -v path/to/indexed/reference:/SEMVAR/assembly \
-  -v example/example_annotations:/SEMVAR/output \
+  -v $(pwd)/example/example_annotations:/SEMVAR/output \
   semvar -f /SEMVAR/variant_list/example_SNVs.tsv -s /SEMVAR/data/SEMs -a /SEMVAR/assembly/hg38.fa -b /SEMVAR/data/BASELINE/SEMs_baseline_norm.txt -n 1 -o /SEMVAR/output
 ```
 
