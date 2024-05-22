@@ -223,7 +223,7 @@ def run_annotation(sem, sem_filename, variants_file, output_dir, baselines):
     '''         
     mat = sems[sem]
     baseline = baselines[sem]
-    chr_refseq_dict = get_chr_refseq_dict('../data/refseq_chr_map.txt')
+    chr_refseq_dict = get_chr_refseq_dict('data/refseq_chr_map.txt')
     
     with open(variants_file) as f, open(os.path.join(output_dir,f'{sem}_annotations.tsv'), 'w+') as output:
         output.writelines(['#FileType=Node:Variant\n',
