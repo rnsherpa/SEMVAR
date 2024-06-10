@@ -245,7 +245,7 @@ def run_annotation(sem, sem_filename, variants_file, output_dir, baselines):
             ref = variant_info[3]
             alt = variant_info[4]
             spdi = get_spdi(chr_refseq_dict, chrom, start, ref, alt)
-            variant_output = '\t'.join([spdi, chrom, end, ref, alt])
+            variant_output = '\t'.join([spdi, chrom, str(end), ref, alt])
 
             if ref_mismatch(chrom, end, ref, assembly):
                 continue
