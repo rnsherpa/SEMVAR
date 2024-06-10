@@ -7,4 +7,6 @@ COPY . /SEMVAR
 RUN apt-get update && apt-get install -y \
     && pip install --no-cache-dir -r requirements.txt
 
-ENTRYPOINT ["python", "semvar.py"]
+RUN chmod +x docker-entrypoint.sh
+
+ENTRYPOINT ["./docker-entrypoint.sh"]
