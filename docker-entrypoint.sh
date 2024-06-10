@@ -21,6 +21,6 @@ if ! id -u semuser >/dev/null 2>&1; then
     adduser --disabled-password --gecos '' --uid $HOST_UID --gid $HOST_GID semuser
 fi
 
-chown -R semuser:semgroup /semvar
+chown -R semuser:semgroup /SEMVAR
 
 exec su semuser -c "python SEMVAR.py $@"
