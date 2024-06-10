@@ -1,3 +1,5 @@
 __pycache__/
 
 scripts/
+example/example_annotations/*
+!example/example_annotations/.gitkeep
