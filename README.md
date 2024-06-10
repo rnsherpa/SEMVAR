@@ -33,6 +33,8 @@ Build docker image (Temporary until image hosted):
 Run SEMVAR docker image:
 ```
 docker run -it --rm \
+  -e HOST_UID=$(id -u) \
+  -e HOST_GID=$(id -g) \
   -v $(pwd)/example/variant_list:/SEMVAR/variant_list \
   -v path/to/indexed/reference:/SEMVAR/assembly \
   -v $(pwd)/example/example_annotations:/SEMVAR/output \
