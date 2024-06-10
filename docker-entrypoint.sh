@@ -23,4 +23,4 @@ fi
 
 chown -R semuser:semgroup /SEMVAR
 
-exec su semuser -c "python SEMVAR.py $@"
+exec gosu semuser -c "python SEMVAR.py $@"
