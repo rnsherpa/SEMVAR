@@ -14,7 +14,7 @@ def read_motif_file(motif_file):
     return header, mat
 
 def load_sems(sems_dir):
-    '''Load all SEMs in a directory into a dictionary 
+    '''Load all SEMs in a directory into a dictionary, ensuring only one SEM is used per TF 
     Params:
         sems_dir (str): Path to the directory containing SEMs
     Returns:
