@@ -1,0 +1,15 @@
+table semvar
+"BED3+8 SEMpl variant annotation file format"
+(
+string	chrom;	"Reference sequence chromosome or scaffold"
+uint	start;	"Start position in chromosome"
+uint	end;	"End position in chromosome"
+string	spdi;	"SPDI identifier of annotated variant"
+string	ref;	"Reference allele"
+string	alt;	"Alternate allele"
+string	kmer_coord;	"Coordinate of TF-bound sequence used for scoring"
+float	ref_score;	"SEM score for reference sequence"
+float	alt_score;	"SEM score for alternate sequence"
+float   relative_binding_affinity;	"Relative binding affinity between alternate sequence and reference sequence"
+string	effect_on_binding;	"Final annotation comparing relative binding affinity to baseline SEM score of TF"
+)
