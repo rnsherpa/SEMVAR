@@ -234,7 +234,7 @@ def run_annotation(sem, sem_filename, variants_file, output_dir, baselines):
                            f'#SEM_file={sem_filename}\n',
                            f'#TF={sem}\n'
                            f'#Baseline={baseline}\n'])
-        colnames = '\t'.join(['#spdi', 'chrom', 'pos', 'ref', 'alt', 'kmer_coord', 'ref_score', 'alt_score', 'relative_binding_affinity', 'effect_on_binding'])
+        colnames = '\t'.join(['chrom', 'start', 'end', 'spdi', 'ref', 'alt', 'kmer_coord', 'ref_score', 'alt_score', 'relative_binding_affinity', 'effect_on_binding'])
         output.write(f'{colnames}\n')
 
         for line in f:
@@ -245,7 +245,7 @@ def run_annotation(sem, sem_filename, variants_file, output_dir, baselines):
             ref = variant_info[3]
             alt = variant_info[4]
             spdi = get_spdi(chr_refseq_dict, chrom, start, ref, alt)
-            variant_output = '\t'.join([spdi, chrom, str(end), ref, alt])
+            variant_output = '\t'.join([chrom, str(start), str(end), spdi, ref, alt])
 
             if ref_mismatch(chrom, end, ref, assembly):
                 continue
