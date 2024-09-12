@@ -212,7 +212,7 @@ def annotate_variant(ref_score, alt_score, baseline):
 
     return annot, annot_score
 
-def run_annotation(sem, sem_filename, variants_file, output_dir, baselines):
+def run_annotation(sem, sem_filename, variants_file, output_dir, baselines, only_report_effects):
     '''Create annotation file of variants for a given SEM
     Params
         sem (str): Name of TF the SEM was created for
@@ -220,18 +220,14 @@ def run_annotation(sem, sem_filename, variants_file, output_dir, baselines):
         variants_file (str): Path to variants file
         output_dir (str): Path to output directory
         baselines (dict): Keys are motif names and values are baseline values for the corresponding SEM
+        only_report_effects (bool): If true, exclude variants with "no_binding" or "binding_unchanged" from final output
     '''         
     mat = sems[sem]
     baseline = baselines[sem]
     chr_refseq_dict = get_chr_refseq_dict('data/refseq_chr_map.txt')
     
     with open(variants_file) as f, open(os.path.join(output_dir,f'{sem}_annotations.tsv'), 'w+') as output:
-        output.writelines(['#FileType=Node:Variant\n',
-                           '#Contact=Rintsen Sherpa (rintsen@umich.edu), Alan Boyle (apboyle@umich.edu)\n',
-                           '#Genome=GRCh38\n',
-                           f'#Description=Y2AVE variants annotated with effect on {sem} binding at variant positions. Uses SNP Effect Matrices from https://doi.org/10.1093/bioinformatics/btz612\n',
-                           f'#Model=SEMpl\n'
-                           f'#SEM_file={sem_filename}\n',
+        output.writelines([f'#SEM_file={sem_filename}\n',
                            f'#TF={sem}\n'
                            f'#Baseline={baseline}\n'])
         colnames = '\t'.join(['chrom', 'start', 'end', 'spdi', 'ref', 'alt', 'kmer_coord', 'ref_score', 'alt_score', 'relative_binding_affinity', 'effect_on_binding'])
@@ -266,6 +262,9 @@ def run_annotation(sem, sem_filename, variants_file, output_dir, baselines):
                     alt_score = 0
                     annot_score = 0
                     annot = "no_binding"
+            
+            if (only_report_effects == True) and (annot in ["no_binding", "binding_unchanged"]):
+                continue
 
             variant_output = f'{variant_output}\t{kmer_coord}\t{ref_score}\t{alt_score}\t{annot_score}\t{annot}'        
             output.write(f'{variant_output}\n')
@@ -296,6 +295,7 @@ if __name__ == "__main__":
     parser.add_argument('--assembly', '-a', help='Path to indexed reference genome')
     parser.add_argument('--baselines', '-b', help='File containing all the baseline values')
     parser.add_argument('--n_processes', '-n', type=int, help='Number of processes for multiprocessing')
+    parser.add_argument('--only-report-effects', '-e', action='store_true', help='Only include variants with annotated effect in final output')
     parser.add_argument('--outdir', '-o', help='Output path of variant annotations')
     args = parser.parse_args()
 
@@ -311,5 +311,5 @@ if __name__ == "__main__":
 
     # Run annotation with multiprocessing
     with Pool(n_processes) as pool:
-        pool.starmap(run_annotation, zip(list(sems.keys()), sem_filenames, repeat(variants_file), repeat(output_dir), repeat(baselines)))
+        pool.starmap(run_annotation, zip(list(sems.keys()), sem_filenames, repeat(variants_file), repeat(output_dir), repeat(baselines), repeat(args.only_report_effects)))
         
