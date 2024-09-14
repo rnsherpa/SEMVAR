@@ -4,4 +4,7 @@ scripts/
 example/example_annotations/*
 !example/example_annotations/.gitkeep
 
+data/original_SEMs/
+data/BASELINE/SEMs_baselines.txt
+
 *.out
