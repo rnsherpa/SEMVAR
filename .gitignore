@@ -8,3 +8,5 @@ data/original_SEMs/
 data/BASELINE/SEMs_baselines.txt
 
 *.out
+
+*.ipynb
