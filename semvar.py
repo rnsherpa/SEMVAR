@@ -13,10 +13,11 @@ def read_motif_file(motif_file):
             mat.append([float(i) for i in wt[1:]])
     return header, mat
 
-def load_sems(sems_dir):
+def load_sems(sems_dir, sems_list = None):
     '''Load all SEMs in a directory into a dictionary, ensuring only one SEM is used per TF 
     Params:
         sems_dir (str): Path to the directory containing SEMs
+        sems_list (list(str) | None): List of SEMs to generate annotations with. SEMs identified by TF name.
     Returns:
         sems (dict): Keys are TF names and values are the corresponding matrices
         sem_filenames (list): List of SEM filenames 
@@ -26,11 +27,19 @@ def load_sems(sems_dir):
     for filename in sorted(os.listdir(sems_dir)):
         header, mat = read_motif_file(os.path.join(sems_dir, filename))
         tf_name = header.split('\t')[0] # Use first identifier
-        if tf_name not in sems.keys():
-            sems[tf_name] = mat
-            sem_filenames.append(filename)
+        if sems_list is not None:
+            if tf_name not in sems.keys():
+                if tf_name in sems_list:
+                    sems[tf_name] = mat
+                    sem_filenames.append(filename)
+            else:
+                ValueError(f'{tf_name} appears to have multiple SEMs in the directory. Only using first instance.')
         else:
-            ValueError(f'{tf_name} appears to have multiple SEMs in the directory. Only using first instance.')
+            if tf_name not in sems.keys():
+                sems[tf_name] = mat
+                sem_filenames.append(filename)
+            else:
+                ValueError(f'{tf_name} appears to have multiple SEMs in the directory. Only using first instance.')
     return sems, sem_filenames
 
 def load_baselines(baselines_file, sems_dir):
@@ -290,23 +299,25 @@ def get_spdi(chr_refseq_dict, chrom, start, ref, alt):
 if __name__ == "__main__":
 
     parser = ArgumentParser(prog='SEM_variant_annotation')
-    parser.add_argument('--file', '-f', help='Input variant list')
-    parser.add_argument('--semsdir', '-s', help='Path to directory containing SEMs')
-    parser.add_argument('--assembly', '-a', help='Path to indexed reference genome')
-    parser.add_argument('--baselines', '-b', help='File containing all the baseline values')
-    parser.add_argument('--n_processes', '-n', type=int, help='Number of processes for multiprocessing')
+    parser.add_argument('--file', '-f', help='Input variant list', required=True)
+    parser.add_argument('--semsdir', '-d', help='Path to directory containing SEMs', required=True)
+    parser.add_argument('--sems', '-s', nargs='*', default=None, help='List of sems. If not specified, all SEMs from the semsdir will be used')
+    parser.add_argument('--assembly', '-a', help='Path to indexed reference genome', required=True)
+    parser.add_argument('--baselines', '-b', help='File containing all the baseline values', required=True)
+    parser.add_argument('--n_processes', '-n', type=int, default=1, help='Number of processes for multiprocessing')
     parser.add_argument('--only-report-effects', '-e', action='store_true', help='Only include variants with annotated effect in final output')
     parser.add_argument('--outdir', '-o', help='Output path of variant annotations')
     args = parser.parse_args()
 
     variants_file = args.file
     sems_dir = args.semsdir
+    sems_list = args.sems
     assembly = args.assembly
     baselines_file = args.baselines
     n_processes = args.n_processes
     output_dir = args.outdir
 
-    sems, sem_filenames = load_sems(sems_dir)
+    sems, sem_filenames = load_sems(sems_dir, sems_list)
     baselines = load_baselines(baselines_file, sems_dir)
 
     # Run annotation with multiprocessing
