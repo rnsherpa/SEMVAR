@@ -162,6 +162,9 @@ def get_best_scores(mat, baseline, kmers):
         chosen_kmer_coord (str): Coordinate of chosen k-mer pair
     '''
     max_score_diff = 0
+    chosen_ref_score = -10000000
+    chosen_alt_score = -10000000
+    chosen_kmer_coord = '.'
     for ref, alt, coord in zip(kmers['ref'], kmers['alt'], kmers['coords']):
         ref_score = get_sem_sum_score(ref, mat)
         alt_score = get_sem_sum_score(alt, mat)
@@ -172,27 +175,8 @@ def get_best_scores(mat, baseline, kmers):
                 chosen_ref_score = ref_score
                 chosen_alt_score = alt_score
                 chosen_kmer_coord = coord
-        else:
-            chosen_ref_score = -10000000
-            chosen_alt_score = -10000000
-            chosen_kmer_coord = '.'
 
     return chosen_ref_score, chosen_alt_score, chosen_kmer_coord
-
-def check_binding(ref_score, alt_score, baseline):
-    '''Check for presence of binding in a dict of ref and alt k-mer pairs and their reverse compliments by comparing their sum SEM scores to the scrambled baseline.
-    Note: Returns binding=True for a group of kmers if binding is present for least 1 kmer in the group
-    Params
-        ref_score (float): Chosen ref score
-        alt_score (float): Chosen alt score
-        baseline (float): SEM sum score of randomly scrambled motif 
-    Returns
-        binding (bool): Presence or absence of binding at variant position for a given motif
-    '''
-    binding = False
-    if (ref_score>baseline) or (alt_score>baseline):
-        binding = True
-    return binding
 
 def annotate_variant(ref_score, alt_score, baseline):
     '''Compare the SEM sum of a variant to the baseline of that SEM to annotate
@@ -202,7 +186,7 @@ def annotate_variant(ref_score, alt_score, baseline):
         baseline (float): SEM sum score of random background for a given motif
     Returns
         annot (str): Annotation label of variant effect on motif
-        annot_score (float): Annotation score of variant effect on motif 
+        annot_score (float): Difference of SEM scores between alt and ref. Since SEM scores are log2 transformed, this can be interpreted as a log2 fold change of binding affinity due to the variant.
     '''
     if alt_score < baseline < ref_score: 
         annot = "binding_ablated" 
@@ -214,10 +198,12 @@ def annotate_variant(ref_score, alt_score, baseline):
         annot = "binding_increased"
     elif alt_score == ref_score:
         annot = "binding_unchanged"
+    elif (ref_score < baseline) and (alt_score < baseline):
+        annot = "no_binding"
     else: 
         raise ValueError(f"{alt_score},{ref_score},{baseline} Scores do not fit to any of the annotation labels, check score calculation/assignment")
     
-    annot_score = 2**(alt_score-ref_score) #unlog
+    annot_score = alt_score-ref_score
 
     return annot, annot_score
 
@@ -239,7 +225,7 @@ def run_annotation(sem, sem_filename, variants_file, output_dir, baselines, only
         output.writelines([f'#SEM_file={sem_filename}\n',
                            f'#TF={sem}\n'
                            f'#Baseline={baseline}\n'])
-        colnames = '\t'.join(['chrom', 'start', 'end', 'spdi', 'ref', 'alt', 'kmer_coord', 'ref_score', 'alt_score', 'relative_binding_affinity', 'effect_on_binding'])
+        colnames = '\t'.join(['chrom', 'start', 'end', 'spdi', 'ref', 'alt', 'kmer_coord', 'ref_score', 'alt_score', 'log2fc', 'effect_on_binding'])
         output.write(f'{colnames}\n')
 
         for line in f:
@@ -262,15 +248,9 @@ def run_annotation(sem, sem_filename, variants_file, output_dir, baselines, only
             
             if kmers['ref']: # check if kmer list is not empty (due to exclusion of kmers containing N from get_kmer_pairs())
                 ref_score, alt_score, kmer_coord = get_best_scores(mat, baseline, kmers)
-                if check_binding(ref_score, alt_score, baseline):
-                    annot, annot_score = annotate_variant(ref_score, alt_score, baseline)
-                    ref_score = 2**ref_score # unlog
-                    alt_score = 2**alt_score
-                else:
-                    ref_score = 0
-                    alt_score = 0
-                    annot_score = 0
-                    annot = "no_binding"
+                annot, annot_score = annotate_variant(ref_score, alt_score, baseline)
+                ref_score = 2**ref_score # unlog
+                alt_score = 2**alt_score
             
             if (only_report_effects == True) and (annot in ["no_binding", "binding_unchanged"]):
                 continue
