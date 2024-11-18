@@ -117,18 +117,17 @@ def ref_mismatch(chr, pos, list_ref, ref_fasta):
         return True
     else: return False
 
-def get_kmer_pairs(sem_len, ref_fasta, chr, pos, alt):
+def get_kmer_pairs(sem_len, fasta, chr, pos, alt):
     '''Get all possible reference and variant k-mers pairs overlapping the variant position where k is the length of the SEM
     Params
         sem_len (int): length of SEM
-        ref_fasta (path): Path to the reference genome fasta (must have corrsponding .fai index file in the same directory)
+        fasta (pyfaidx.Fasta): Pyfaidx Fasta object of the reference genome assembly
         chr (str): Chromosome of SNV in 'chrN' format
         pos (int): 1-based position of SNV
         alt (str): Alternate allele
     Returns
         kmers (dict of lists): Lists of k-mers and their coordinates
     '''
-    fasta = Fasta(ref_fasta)
     kmers = {
         'ref': [],
         'alt': [],
@@ -207,7 +206,7 @@ def annotate_variant(ref_score, alt_score, baseline):
 
     return annot, annot_score
 
-def run_annotation(sem, sem_filename, variants_file, output_dir, baselines, only_report_effects):
+def run_annotation(sem, sem_filename, variants_file, output_dir, baselines, assembly, only_report_effects):
     '''Create annotation file of variants for a given SEM
     Params
         sem (str): Name of TF the SEM was created for
@@ -215,11 +214,13 @@ def run_annotation(sem, sem_filename, variants_file, output_dir, baselines, only
         variants_file (str): Path to variants file
         output_dir (str): Path to output directory
         baselines (dict): Keys are motif names and values are baseline values for the corresponding SEM
+        assembly (str): Path to genome assembly fasta (must have corrsponding .fai index file in the same directory)
         only_report_effects (bool): If true, exclude variants with "no_binding" or "binding_unchanged" from final output
     '''         
     mat = sems[sem]
     baseline = baselines[sem]
     chr_refseq_dict = get_chr_refseq_dict('data/refseq_chr_map.txt')
+    fasta = Fasta(assembly)
     
     with open(variants_file) as f, open(os.path.join(output_dir,f'{sem}_annotations.tsv'), 'w+') as output:
         output.writelines([f'#SEM_file={sem_filename}\n',
@@ -241,7 +242,7 @@ def run_annotation(sem, sem_filename, variants_file, output_dir, baselines, only
             if ref_mismatch(chrom, end, ref, assembly):
                 continue
 
-            kmers = get_kmer_pairs(len(mat), assembly, chrom, end, alt)
+            kmers = get_kmer_pairs(len(mat), fasta, chrom, end, alt)
 
             annot = 0
             annot_score = 0
@@ -302,5 +303,5 @@ if __name__ == "__main__":
 
     # Run annotation with multiprocessing
     with Pool(n_processes) as pool:
-        pool.starmap(run_annotation, zip(list(sems.keys()), sem_filenames, repeat(variants_file), repeat(output_dir), repeat(baselines), repeat(args.only_report_effects)))
+        pool.starmap(run_annotation, zip(list(sems.keys()), sem_filenames, repeat(variants_file), repeat(output_dir), repeat(baselines), repeat(assembly), repeat(args.only_report_effects)))
         
