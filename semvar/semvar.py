@@ -5,10 +5,10 @@ from argparse import ArgumentParser
 from pyfaidx import Fasta
 
 from constants import CHR_REFSEQ_DICT
-from io import load_sems, load_baselines, get_spdi
-from utils import ref_mismatch
-from kmers import get_kmers
-from scoring import get_best_scores
+from semio import load_sems, load_baselines, get_spdi
+from utils import ref_mismatch, contains_invalid_chars, no_valid_kmers
+from seq import get_sequences
+from scoring import get_best_sem_score
 
 def annotate_variant(ref_score, alt_score, baseline):
     '''Compare the SEM sum of a variant to the baseline of that SEM to annotate
@@ -69,27 +69,34 @@ def run_annotation(sem, sem_filename, variants_file, output_dir, baselines, asse
             end = int(variant_info[2])
             ref = variant_info[3]
             alt = variant_info[4]
+            if contains_invalid_chars(ref) or contains_invalid_chars(alt):
+                print(f'Warning: Invalid characters for ref and/or alt alleles. Skipping this variant. Check variant {chrom}:{end}:{ref}:{alt}')
+                continue
             spdi = get_spdi(CHR_REFSEQ_DICT, chrom, start, ref, alt)
             variant_output = '\t'.join([chrom, str(start), str(end), spdi, ref, alt])
 
             if ref_mismatch(chrom, end, ref, assembly):
                 continue
 
-            kmers = get_kmers(len(mat), fasta, chrom, end, alt)
+            sem_len = len(mat)
+            ref_seq, alt_seq = get_sequences(sem_len, fasta, chrom, end, alt)
+            if no_valid_kmers(ref_seq, sem_len) or no_valid_kmers(alt_seq, sem_len):
+                print(f'Warning: No valid kmers. Skipping this variant. Check variant {chrom}:{end}:{ref}:{alt}')
+                continue
 
             annot = 0
             annot_score = 0
             
-            if kmers['ref']: # check if kmer list is not empty (due to exclusion of kmers containing N from get_kmer_pairs())
-                ref_score, alt_score, kmer_coord = get_best_scores(mat, baseline, kmers)
-                annot, annot_score = annotate_variant(ref_score, alt_score, baseline)
-                ref_score = 2**ref_score # unlog
-                alt_score = 2**alt_score
+            ref_score = get_best_sem_score(ref_seq, mat)
+            alt_score = get_best_sem_score(alt_seq, mat)
+            annot, annot_score = annotate_variant(ref_score, alt_score, baseline)
+            ref_score = 2**ref_score # unlog
+            alt_score = 2**alt_score
             
             if (only_report_effects == True) and (annot in ["no_binding", "binding_unchanged"]):
                 continue
 
-            variant_output = f'{variant_output}\t{kmer_coord}\t{ref_score}\t{alt_score}\t{annot_score}\t{annot}'        
+            variant_output = f'{variant_output}\t{ref_score}\t{alt_score}\t{annot_score}\t{annot}'        
             output.write(f'{variant_output}\n')
 
 if __name__ == "__main__":

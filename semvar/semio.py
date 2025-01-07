@@ -30,13 +30,13 @@ def load_sems(sems_dir, sems_list = None):
                     sems[tf_name] = mat
                     sem_filenames.append(filename)
             else:
-                ValueError(f'{tf_name} appears to have multiple SEMs in the directory. Only using first instance.')
+                print(f'{tf_name} appears to have multiple SEMs in the directory. Only using first instance.')
         else:
             if tf_name not in sems.keys():
                 sems[tf_name] = mat
                 sem_filenames.append(filename)
             else:
-                ValueError(f'{tf_name} appears to have multiple SEMs in the directory. Only using first instance.')
+                print(f'{tf_name} appears to have multiple SEMs in the directory. Only using first instance.')
     return sems, sem_filenames
 
 def load_baselines(baselines_file, sems_dir):
@@ -67,5 +67,5 @@ def load_baselines(baselines_file, sems_dir):
                 if tf_name not in baselines.keys():
                     baselines[tf_name] = float(baseline)
                 else:
-                    ValueError(f'{tf_name} appears to have multiple baseline values in the file. Only using first instance.')
+                    print(f'{tf_name} appears to have multiple baseline values in the file. Only using first instance.')
     return baselines
