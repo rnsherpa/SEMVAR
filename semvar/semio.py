@@ -1,4 +1,5 @@
 import os
+import numpy as np
 
 def _read_motif_file(motif_file):
     mat = []
@@ -7,7 +8,7 @@ def _read_motif_file(motif_file):
         for line in file:
             wt = line.strip().split("\t")
             mat.append([float(i) for i in wt[1:]])
-    return header, mat
+    return header, np.array(mat)
 
 def load_sems(sems_dir, sems_list = None):
     '''Load all SEMs in a directory into a dictionary, ensuring only one SEM is used per TF 
