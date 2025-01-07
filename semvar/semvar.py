@@ -4,121 +4,13 @@ from itertools import repeat
 from argparse import ArgumentParser
 from pyfaidx import Fasta
 
-def read_motif_file(motif_file):
-    mat = []
-    with open(motif_file) as file:
-        header = file.readline().strip()
-        for line in file:
-            wt = line.strip().split("\t")
-            mat.append([float(i) for i in wt[1:]])
-    return header, mat
+from constants import CHR_REFSEQ_DICT
+from io import load_sems, load_baselines, get_spdi
+from utils import ref_mismatch
+from scoring import get_best_scores
 
-def load_sems(sems_dir, sems_list = None):
-    '''Load all SEMs in a directory into a dictionary, ensuring only one SEM is used per TF 
-    Params:
-        sems_dir (str): Path to the directory containing SEMs
-        sems_list (list(str) | None): List of SEMs to generate annotations with. SEMs identified by TF name.
-    Returns:
-        sems (dict): Keys are TF names and values are the corresponding matrices
-        sem_filenames (list): List of SEM filenames 
-    '''
-    sems = {}
-    sem_filenames = []
-    for filename in sorted(os.listdir(sems_dir)):
-        header, mat = read_motif_file(os.path.join(sems_dir, filename))
-        tf_name = header.split('\t')[0] # Use first identifier
-        if sems_list is not None:
-            if tf_name not in sems.keys():
-                if tf_name in sems_list:
-                    sems[tf_name] = mat
-                    sem_filenames.append(filename)
-            else:
-                ValueError(f'{tf_name} appears to have multiple SEMs in the directory. Only using first instance.')
-        else:
-            if tf_name not in sems.keys():
-                sems[tf_name] = mat
-                sem_filenames.append(filename)
-            else:
-                ValueError(f'{tf_name} appears to have multiple SEMs in the directory. Only using first instance.')
-    return sems, sem_filenames
-
-def load_baselines(baselines_file, sems_dir):
-    '''Load all baselines from file to a dictionary
-    Params:
-        baselines_file (str): Path to file containing baselines
-        sems_dir (str): Path to the directory containing SEMs
-    Returns:
-        baselines (dict): Key are motifs and values are the corresponding baselines
-    '''
-    motif_name_map = {}
-    for filename in sorted(os.listdir(sems_dir)):
-        header, _ = read_motif_file(os.path.join(sems_dir, filename))
-        tf_name = header.split('\t')[0]
-        filename_no_ext = os.path.splitext(filename)[0]
-        motif_name_map[filename_no_ext] = tf_name
-
-    baselines = {}
-    with open(baselines_file) as f:
-            for line in f:
-                line = line.strip()
-                motif_name = line.split('\t')[0]
-                if motif_name in motif_name_map.keys():
-                    tf_name = motif_name_map[motif_name] # map from filename to TF name
-                else:
-                    continue
-                baseline = line.split('\t')[1]
-                if tf_name not in baselines.keys():
-                    baselines[tf_name] = float(baseline)
-                else:
-                    ValueError(f'{tf_name} appears to have multiple baseline values in the file. Only using first instance.')
-    return baselines
-
-def char_to_num(sequence):
-    char_list = ['A', 'C', 'G', 'T']
-    numeric_sequence = []
-    for char in sequence:
-        if char in char_list:
-            numeric_sequence.append(char_list.index(char))
-        else:
-            raise ValueError(f"Unknown character! {sequence}")
-    return numeric_sequence
-
-def revdnacomp(dna):
-    revcomp = dna[::-1].translate(str.maketrans('ACGTacgt', 'TGCAtgca'))
-    return revcomp
-
-def get_sem_sum_score(seq, mat):
-    NUM_SEQ = char_to_num(seq)
-
-    max_score = -10000000
-
-    for k in range(2):
-        for i in range(len(NUM_SEQ) - len(mat) + 1):
-            bit_score = sum(mat[j][NUM_SEQ[i + j]] for j in range(len(mat)))
-            if bit_score > max_score:
-                max_score = bit_score
-
-        NUM_SEQ = char_to_num(revdnacomp(seq))
-
-    return max_score
-
-def ref_mismatch(chr, pos, list_ref, ref_fasta):
-    '''Check for Ns in ref allele column in variant list
-    Params
-        chr (str): Chromosome of SNV in 'chrN' format
-        pos (int): 1-based position of SNV
-        list_ref (str): Reference allele at position from variant list
-        ref_fasta (path): Path to the reference genome fasta (must have corrsponding .fai index file in the same directory)
-    Returns
-        (bool): True if variant list ref does not match fasta ref, False if it does
-    '''
-    fasta = Fasta(ref_fasta)
-    if list_ref != fasta[chr][pos-1:pos].seq.upper():
-        return True
-    else: return False
-
-def get_kmer_pairs(sem_len, fasta, chr, pos, alt):
-    '''Get all possible reference and variant k-mers pairs overlapping the variant position where k is the length of the SEM
+def get_kmers(sem_len, fasta, chr, pos, alt):
+    '''Get all possible reference and variant k-mers overlapping the variant position where k is the length of the SEM
     Params
         sem_len (int): length of SEM
         fasta (pyfaidx.Fasta): Pyfaidx Fasta object of the reference genome assembly
@@ -149,34 +41,6 @@ def get_kmer_pairs(sem_len, fasta, chr, pos, alt):
 
     return kmers
 
-def get_best_scores(mat, baseline, kmers):
-    '''Go through each possible kmer pair and return the ref and alt scores with the largest absolute difference
-    Params
-        mat (list of lists): SEM
-        baseline (float): SEM sum score of randomly scrambled motif 
-        kmers (dict of lists): Dictionary of ref and alt k-mers
-    Returns
-        chosen_ref_score (float): Ref score of chosen k-mer pair
-        chosen_alt_score (float): Alt score of chosen k-mer pair
-        chosen_kmer_coord (str): Coordinate of chosen k-mer pair
-    '''
-    max_score_diff = 0
-    chosen_ref_score = -10000000
-    chosen_alt_score = -10000000
-    chosen_kmer_coord = '.'
-    for ref, alt, coord in zip(kmers['ref'], kmers['alt'], kmers['coords']):
-        ref_score = get_sem_sum_score(ref, mat)
-        alt_score = get_sem_sum_score(alt, mat)
-        if (ref_score > baseline) or (alt_score > baseline): # Now checking exactly which kmer pairs have binding
-            abs_score_diff = abs(alt_score-ref_score)
-            if abs_score_diff > max_score_diff:
-                max_score_diff = abs_score_diff
-                chosen_ref_score = ref_score
-                chosen_alt_score = alt_score
-                chosen_kmer_coord = coord
-
-    return chosen_ref_score, chosen_alt_score, chosen_kmer_coord
-
 def annotate_variant(ref_score, alt_score, baseline):
     '''Compare the SEM sum of a variant to the baseline of that SEM to annotate
     Params
@@ -200,6 +64,7 @@ def annotate_variant(ref_score, alt_score, baseline):
     elif (ref_score < baseline) and (alt_score < baseline):
         annot = "no_binding"
     else: 
+        annot = ""
         raise ValueError(f"{alt_score},{ref_score},{baseline} Scores do not fit to any of the annotation labels, check score calculation/assignment")
     
     annot_score = alt_score-ref_score
@@ -219,7 +84,6 @@ def run_annotation(sem, sem_filename, variants_file, output_dir, baselines, asse
     '''         
     mat = sems[sem]
     baseline = baselines[sem]
-    chr_refseq_dict = get_chr_refseq_dict('data/refseq_chr_map.txt')
     fasta = Fasta(assembly)
     
     with open(variants_file) as f, open(os.path.join(output_dir,f'{sem}_annotations.tsv'), 'w+') as output:
@@ -236,13 +100,13 @@ def run_annotation(sem, sem_filename, variants_file, output_dir, baselines, asse
             end = int(variant_info[2])
             ref = variant_info[3]
             alt = variant_info[4]
-            spdi = get_spdi(chr_refseq_dict, chrom, start, ref, alt)
+            spdi = get_spdi(CHR_REFSEQ_DICT, chrom, start, ref, alt)
             variant_output = '\t'.join([chrom, str(start), str(end), spdi, ref, alt])
 
             if ref_mismatch(chrom, end, ref, assembly):
                 continue
 
-            kmers = get_kmer_pairs(len(mat), fasta, chrom, end, alt)
+            kmers = get_kmers(len(mat), fasta, chrom, end, alt)
 
             annot = 0
             annot_score = 0
@@ -258,24 +122,6 @@ def run_annotation(sem, sem_filename, variants_file, output_dir, baselines, asse
 
             variant_output = f'{variant_output}\t{kmer_coord}\t{ref_score}\t{alt_score}\t{annot_score}\t{annot}'        
             output.write(f'{variant_output}\n')
-
-def get_chr_refseq_dict(mapping_file):
-    '''
-    Keys are chromosome in chrN format (eg. chr1), values are refseq equivalent (eg. NC_000001.11)
-    '''
-    chr_refseq_dict = {}
-    with open(mapping_file) as f:
-        for line in f:
-            line = line.strip().split('\t')
-            chr_refseq_dict[line[1]] = line[2]
-    return chr_refseq_dict
-
-def get_spdi(chr_refseq_dict, chrom, start, ref, alt):
-    '''
-    Outputs SNV identification in SPDI format: https://academic.oup.com/bioinformatics/article/36/6/1902/5628222
-    '''
-    spdi = f'{chr_refseq_dict[chrom]}:{start}:{ref}:{alt}'
-    return spdi
 
 if __name__ == "__main__":
 
