@@ -1,11 +1,10 @@
 import numpy as np
 
-from semvar.io import _read_motif_file, load_sems, load_baselines
-
-def test_read_motif_file():
-    header, mat = _read_motif_file('tests/test_data/test_SEMs/BHLHB2_GM12878.sem')
-    assert header == 'BHLHE40\tA\tC\tG\tT'
-    true_array = np.array([
+from semvar.io import load_sems, load_baselines
+    
+def test_load_sems():
+    sems, sem_filenames = load_sems('tests/test_data/test_SEMs')
+    true_sem = np.array([
         [-0.916001, -0.456257, 0.0449168, -0.830239],
         [-0.952639, -1.48185, 0.00568567, 0.0552664],
         [-1.81496, 0.0460032, -1.98482, -2.0076],
@@ -17,11 +16,8 @@ def test_read_motif_file():
         [0.0461967, -0.0127797, -1.50707, -0.981267],
         [-0.874196, 0.039353, -0.464275, -0.906534]
         ])
-    np.testing.assert_array_equal(mat, true_array)
-    
-def test_load_sems():
-    sems, sem_filenames = load_sems('tests/test_data/test_SEMs')
-    pass # TODO: Implement
+    np.testing.assert_array_equal(sems['BHLHE40'], true_sem)
+    assert sem_filenames == ['BHLHB2_GM12878.sem', 'CREB3L1_2.sem']
 
 def test_load_baselines():
     baselines = load_baselines('tests/test_data/baselines.txt', 'tests/test_data/test_SEMs')
