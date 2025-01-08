@@ -4,11 +4,11 @@ from itertools import repeat
 from argparse import ArgumentParser
 from pyfaidx import Fasta
 
-from constants import CHR_REFSEQ_DICT
-from semio import load_sems, load_baselines, get_spdi
-from utils import ref_mismatch, contains_invalid_chars, no_valid_kmers
-from seq import get_sequences
-from scoring import get_best_sem_score
+from semvar.constants import CHR_REFSEQ_DICT
+from semvar.io import load_sems, load_baselines, get_spdi
+from semvar.utils import ref_mismatch, contains_invalid_chars, no_valid_kmers
+from semvar.seq import get_sequences
+from semvar.scoring import get_best_sem_score
 
 def annotate_variant(ref_score, alt_score, baseline):
     '''Compare the SEM sum of a variant to the baseline of that SEM to annotate

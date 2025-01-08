@@ -1,6 +1,6 @@
 import numpy as np
 
-from semvar.semio import _read_motif_file, load_sems, load_baselines
+from semvar.io import _read_motif_file, load_sems, load_baselines
 
 def test_read_motif_file():
     header, mat = _read_motif_file('tests/test_data/test_SEMs/BHLHB2_GM12878.sem')

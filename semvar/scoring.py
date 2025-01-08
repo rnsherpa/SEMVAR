@@ -1,6 +1,6 @@
 import numpy as np
 
-from utils import revdnacomp, char_to_num
+from semvar.utils import revdnacomp, char_to_num
 
 def _get_max_score(num_seq, mat, len_mat, max_score):
     windows = np.lib.stride_tricks.sliding_window_view(num_seq, len_mat)
