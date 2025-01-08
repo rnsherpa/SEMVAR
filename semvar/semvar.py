@@ -33,7 +33,6 @@ def annotate_variant(ref_score, alt_score, baseline):
     elif (ref_score < baseline) and (alt_score < baseline):
         annot = "no_binding"
     else: 
-        annot = ""
         raise ValueError(f"{alt_score},{ref_score},{baseline} Scores do not fit to any of the annotation labels, check score calculation/assignment")
     
     annot_score = alt_score-ref_score
