@@ -10,7 +10,7 @@ def _read_motif_file(motif_file):
             mat.append([float(i) for i in wt[1:]])
     return header, np.array(mat)
 
-def load_sems(sems_dir, sems_list = None):
+def load_sems(sems_dir, sems_list = None): # TODO: Remove redundancy check
     '''Load all SEMs in a directory into a dictionary, ensuring only one SEM is used per TF 
     Params:
         sems_dir (str): Path to the directory containing SEMs
