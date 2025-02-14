@@ -71,8 +71,6 @@ def run_annotation(sem, sem_filename, variants_file, output_dir, baselines, asse
             if contains_invalid_chars(ref) or contains_invalid_chars(alt):
                 print(f'Warning: Invalid characters for ref and/or alt alleles. Skipping this variant. Check variant {chrom}:{end}:{ref}:{alt}')
                 continue
-            spdi = get_spdi(CHR_REFSEQ_DICT, chrom, start, ref, alt)
-            variant_output = '\t'.join([chrom, str(start), str(end), spdi, ref, alt])
 
             if ref_mismatch(chrom, end, ref, assembly):
                 continue
@@ -94,8 +92,10 @@ def run_annotation(sem, sem_filename, variants_file, output_dir, baselines, asse
             
             if (only_report_effects == True) and (annot in ["no_binding", "binding_unchanged"]):
                 continue
-
-            variant_output = f'{variant_output}\t{ref_score}\t{alt_score}\t{annot_score}\t{annot}'        
+            
+            # Write to output file
+            spdi = get_spdi(CHR_REFSEQ_DICT, chrom, start, ref, alt)
+            variant_output = '\t'.join([chrom, str(start), str(end), spdi, ref, alt, ref_score, alt_score, annot_score, annot])     
             output.write(f'{variant_output}\n')
 
 if __name__ == "__main__":
