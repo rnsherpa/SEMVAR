@@ -39,25 +39,24 @@ def annotate_variant(ref_score, alt_score, baseline):
 
     return annot, annot_score
 
-def run_annotation(sem, sem_filename, variants_file, output_dir, baselines, assembly, only_report_effects):
+def run_annotation(tf_name, sem_dict, variants_file, output_dir, baselines, assembly, only_report_effects):
     '''Create annotation file of variants for a given SEM
     Params
-        sem (str): Name of TF the SEM was created for
-        sem_filename (str): Filename of SEM used to annotate variants
+        tf_name (str): Name of TF the SEM is modeling
+        sem_dict (dict): Dict of the SEM data (matrices, baselines, filenames) corresponding to tf_name
         variants_file (str): Path to variants file
         output_dir (str): Path to output directory
-        baselines (dict): Keys are motif names and values are baseline values for the corresponding SEM
         assembly (str): Path to genome assembly fasta (must have corrsponding .fai index file in the same directory)
         only_report_effects (bool): If true, exclude variants with "no_binding" or "binding_unchanged" from final output
     '''         
-    mat = sems[sem]
-    baseline = baselines[sem]
+    mat = sem_dict['mat']
+    baseline = sem_dict['baseline']
+    sem_filename = sem_dict['filename']
     fasta = Fasta(assembly)
     
-    with open(variants_file) as f, open(os.path.join(output_dir,f'{sem}_annotations.tsv'), 'w+') as output:
+    with open(variants_file) as f, open(os.path.join(output_dir,f'{tf_name}_SEM_predictions.tsv'), 'w+') as output:
         output.writelines([f'#SEM_file={sem_filename}\n',
-                           f'#TF={sem}\n'
-                           f'#Baseline={baseline}\n'])
+                           f'#TF={tf_name}\n'])
         colnames = '\t'.join(['chrom', 'start', 'end', 'spdi', 'ref', 'alt', 'kmer_coord', 'ref_score', 'alt_score', 'log2fc', 'effect_on_binding'])
         output.write(f'{colnames}\n')
 
@@ -105,7 +104,6 @@ if __name__ == "__main__":
     parser.add_argument('--semsdir', '-d', help='Path to directory containing SEMs', required=True)
     parser.add_argument('--sems', '-s', nargs='*', default=None, help='List of sems. If not specified, all SEMs from the semsdir will be used')
     parser.add_argument('--assembly', '-a', help='Path to indexed reference genome', required=True)
-    parser.add_argument('--baselines', '-b', help='File containing all the baseline values', required=True)
     parser.add_argument('--n_processes', '-n', type=int, default=1, help='Number of processes for multiprocessing')
     parser.add_argument('--only-report-effects', '-e', action='store_true', help='Only include variants with annotated effect in final output')
     parser.add_argument('--outdir', '-o', help='Output path of variant annotations')
@@ -115,14 +113,14 @@ if __name__ == "__main__":
     sems_dir = args.semsdir
     sems_list = args.sems
     assembly = args.assembly
-    baselines_file = args.baselines
     n_processes = args.n_processes
     output_dir = args.outdir
 
-    sems, sem_filenames = load_sems(sems_dir, sems_list)
-    baselines = load_baselines(baselines_file, sems_dir)
+    sems_dicts = load_sems(sems_dir, sems_list)
+    tf_name_list = list(sems_dicts.keys())
+    sems_dict_list = [sems_dicts[tf_name] for tf_name in tf_name_list]
 
     # Run annotation with multiprocessing
     with Pool(n_processes) as pool:
-        pool.starmap(run_annotation, zip(list(sems.keys()), sem_filenames, repeat(variants_file), repeat(output_dir), repeat(baselines), repeat(assembly), repeat(args.only_report_effects)))
+        pool.starmap(run_annotation, zip(tf_name_list, sems_dict_list, repeat(variants_file), repeat(output_dir), repeat(assembly), repeat(args.only_report_effects)))
         
