@@ -19,6 +19,7 @@ def contains_invalid_chars(sequence):
         return False
     
 def no_valid_kmers(sequence, sem_len):
+    '''Returns false if there's at least one valid kmer of size sem_len in the sequence'''
     valid_bases = {'A', 'C', 'T', 'G'}
     current_length = 0
     
