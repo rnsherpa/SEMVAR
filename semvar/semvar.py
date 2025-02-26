@@ -51,6 +51,7 @@ def run_annotation(tf_name, sem_dict, variants_file, output_dir, assembly, only_
     '''         
     mat = sem_dict['mat']
     baseline = sem_dict['baseline']
+    sem_filename = sem_dict['filename']
     fasta = Fasta(assembly)
     
     with open(variants_file) as f, open(os.path.join(output_dir, f'{tf_name}_SEM_predictions.tsv'), 'w+') as output:
@@ -62,26 +63,26 @@ def run_annotation(tf_name, sem_dict, variants_file, output_dir, assembly, only_
                             f"#AssayContext: ChIP-seq\n",
                             f"#Model: SEMpl_v1.0.0\n"
                             ])
-        colnames = '\t'.join(['chr', 'pos', 'spdi', 'ref', 'alt', 'ref_seq_context', 'alt_seq_context', 'ref_score', 'alt_score', 'variant_effect_score', 'pvalue', 'SEMpl.annotation', 'SEMpl.baseline'])
+        colnames = '\t'.join(['chr', 'pos', 'spdi', 'ref', 'alt', 'ref_seq_context', 'alt_seq_context', 'ref_score', 'alt_score', 'variant_effect_score', 'pvalue', 'SEMpl.annotation', 'SEMpl.baseline', 'SEMpl.SEM_filename'])
         output.write(f'{colnames}\n')
 
         for line in f:
             variant_info = line.strip().split('\t')
             chrom = variant_info[0]
             pos = int(variant_info[1])
-            var_id = int(variant_info[2])
+            var_id = variant_info[2]
             ref = variant_info[3]
             alt = variant_info[4]
             if contains_invalid_chars(ref) or contains_invalid_chars(alt):
                 print(f'Warning: Invalid characters for ref and/or alt alleles. Skipping this variant. Check variant {chrom}:{pos}:{ref}:{alt}')
                 continue
 
-            if ref_mismatch(chrom, pos, ref, assembly):
+            if ref_mismatch(chrom, pos, ref, fasta):
                 print(f'Warning: Reference allele mismatch at {chrom}:{pos}:{ref}:{alt}. Skipping this variant.')
                 continue
 
             sem_len = len(mat)
-            ref_seq, alt_seq = get_sequences(sem_len, fasta, chrom, pos, alt)
+            ref_seq, alt_seq = get_sequences(sem_len, fasta, chrom, pos, ref, alt)
             if no_valid_kmers(ref_seq, sem_len) or no_valid_kmers(alt_seq, sem_len):
                 print(f'Warning: No valid kmers. Skipping this variant. Check variant {chrom}:{pos}:{ref}:{alt}')
                 continue
@@ -102,7 +103,7 @@ def run_annotation(tf_name, sem_dict, variants_file, output_dir, assembly, only_
             
             # Write to output file
             # spdi = get_spdi(CHR_REFSEQ_DICT, chrom, pos-1, ref, alt) SPDI given in input VCF
-            variant_output = '\t'.join([chrom, str(pos), var_id, ref, alt, ref_seq_context, alt_seq_context, ref_score, alt_score, annot_score, 'N/A', annot, baseline])     
+            variant_output = '\t'.join([chrom, str(pos), var_id, ref, alt, ref_seq_context, alt_seq_context, str(ref_score), str(alt_score), str(annot_score), 'N/A', annot, str(baseline), sem_filename])     
             output.write(f'{variant_output}\n')
 
 if __name__ == "__main__":
