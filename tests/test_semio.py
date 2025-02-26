@@ -1,27 +1,36 @@
 import numpy as np
 
-from semvar.io import load_sems, load_baselines
+from semvar.io import load_sems
     
 def test_load_sems():
-    sems, sem_filenames = load_sems('tests/test_data/test_SEMs')
-    true_sem = np.array([
-        [-0.916001, -0.456257, 0.0449168, -0.830239],
-        [-0.952639, -1.48185, 0.00568567, 0.0552664],
-        [-1.81496, 0.0460032, -1.98482, -2.0076],
-        [0.0959402, -1.80794, -1.28597, -1.83786],
-        [-3.23656, 0.0467237, -2.52416, -2.64658],
-        [-2.6633, -2.52651, 0.0467237, -3.20208],
-        [-1.82936, -1.29516, -1.78077, 0.1013],
-        [-2.03469, -1.99447, 0.0458512, -1.79719],
-        [0.0461967, -0.0127797, -1.50707, -0.981267],
-        [-0.874196, 0.039353, -0.464275, -0.906534]
-        ])
-    np.testing.assert_array_equal(sems['BHLHE40'], true_sem)
-    assert sem_filenames == ['BHLHB2_GM12878.sem', 'CREB3L1_2.sem']
+    sems_dict = load_sems('tests/test_data/test_SEMs')
 
-def test_load_baselines():
-    baselines = load_baselines('tests/test_data/baselines.txt', 'tests/test_data/test_SEMs')
-    assert baselines == {
-        'BHLHE40': -2.473448,
-        'CREB3L1': -1.009556,
-    }
+    true_dummy_sem = np.array([
+        [1, 2, 3, 4],
+        [2, 3, 4, 5],
+        [3, 4, 5, 6],
+        [4, 5, 6, 7]
+        ])
+    np.testing.assert_array_equal(sems_dict['dummy']['mat'], true_dummy_sem)
+
+    true_usf1_sem = np.array([
+        [-0.644176,	-0.301248,	0.088734,	-0.942887],
+        [-0.724766,	-1.162370,	0.091925,	-1.881332],
+        [-1.664509,	-0.805443,	-1.402396,	0.127123],
+        [-2.931446,	0.046641,	-2.213511,	-3.054659],
+        [0.078802,	-2.417371,	-1.752331,	-2.696168],
+        [-3.281289,	0.096484,	-2.583739,	-1.974596],
+        [-1.963534,	-2.570744,	0.119178,	-3.271426],
+        [-2.707923,	-1.755313,	-2.434221,	0.078391],
+        [-3.093634,	-2.237835,	0.045490,	-2.936693],
+        [0.165581,	-1.350345,	-0.755858,	-1.618773],
+        [-1.853719,	0.119772,	-1.124698,	-0.702419],
+        [-0.980905,	0.073014,	-0.339407,	-0.663971]
+        ])
+    np.testing.assert_array_equal(sems_dict['USF1']['mat'], true_usf1_sem)
+
+    assert sems_dict['USF1']['baseline'] == -2.6771622537803843
+
+    assert sems_dict['dummy']['filename'] == 'dummy.sem'
+    assert sems_dict['CTCF']['filename'] == 'CTCF_HUMAN.HepG2.sem'
+    assert sems_dict['USF1']['filename'] == 'USF1_HUMAN.HepG2.sem'
