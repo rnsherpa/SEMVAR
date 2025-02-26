@@ -4,11 +4,17 @@ from semvar.utils import revdnacomp, char_to_num
 
 def _get_max_score(num_seq, mat, len_mat):
     windows = np.lib.stride_tricks.sliding_window_view(num_seq, len_mat)
-    windows = windows[np.all(windows != 7, axis=1)]
-    bit_scores = mat[np.arange(len_mat)[:, None], windows.T].sum(axis=0)
+    mask = np.all(windows != 7, axis=1) # Mask for any kmers with invalid characters
+    original_indices = np.flatnonzero(mask)
+    windows_filtered = windows[mask]
+    bit_scores = mat[np.arange(len_mat)[:, None], windows_filtered.T].sum(axis=0)
     max_score = bit_scores.max()
-    max_score_idx = np.argmax(bit_scores)
-    return max_score, max_score_idx, len(windows)
+
+    max_score_idx_filtered = np.argmax(bit_scores)
+    max_score_idx_original = original_indices[max_score_idx_filtered]
+
+    assert np.array_equal(windows[max_score_idx_original], windows_filtered[max_score_idx_filtered])
+    return max_score, max_score_idx_original, len(windows)
 
 def get_best_sem_score(seq, mat):
     num_seq = char_to_num(seq)

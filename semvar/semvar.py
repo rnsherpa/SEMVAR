@@ -69,7 +69,7 @@ def run_annotation(tf_name, sem_dict, variants_file, output_dir, assembly, only_
             variant_info = line.strip().split('\t')
             chrom = variant_info[0]
             pos = int(variant_info[1])
-            spdi = int(variant_info[2])
+            var_id = int(variant_info[2])
             ref = variant_info[3]
             alt = variant_info[4]
             if contains_invalid_chars(ref) or contains_invalid_chars(alt):
@@ -77,6 +77,7 @@ def run_annotation(tf_name, sem_dict, variants_file, output_dir, assembly, only_
                 continue
 
             if ref_mismatch(chrom, pos, ref, assembly):
+                print(f'Warning: Reference allele mismatch at {chrom}:{pos}:{ref}:{alt}. Skipping this variant.')
                 continue
 
             sem_len = len(mat)
@@ -100,8 +101,8 @@ def run_annotation(tf_name, sem_dict, variants_file, output_dir, assembly, only_
                 continue
             
             # Write to output file
-            spdi = get_spdi(CHR_REFSEQ_DICT, chrom, pos-1, ref, alt)
-            variant_output = '\t'.join([chrom, str(pos), spdi, ref, alt, ref_seq_context, alt_seq_context, ref_score, alt_score, annot_score, 'N/A', annot, baseline])     
+            # spdi = get_spdi(CHR_REFSEQ_DICT, chrom, pos-1, ref, alt) SPDI given in input VCF
+            variant_output = '\t'.join([chrom, str(pos), var_id, ref, alt, ref_seq_context, alt_seq_context, ref_score, alt_score, annot_score, 'N/A', annot, baseline])     
             output.write(f'{variant_output}\n')
 
 if __name__ == "__main__":
