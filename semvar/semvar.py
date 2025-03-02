@@ -50,7 +50,7 @@ def run_annotation(tf_name, sem_dict, variants_file, output_dir, assembly, only_
         only_report_effects (bool): If true, exclude variants with "no_binding" or "binding_unchanged" from final output
     '''         
     mat = sem_dict['mat']
-    baseline = sem_dict['baseline']]
+    baseline = sem_dict['baseline']
     fasta = Fasta(assembly)
     
     with open(variants_file) as f, open(os.path.join(output_dir, f'{tf_name}_SEM_predictions.tsv'), 'w+') as output:
