@@ -50,8 +50,7 @@ def run_annotation(tf_name, sem_dict, variants_file, output_dir, assembly, only_
         only_report_effects (bool): If true, exclude variants with "no_binding" or "binding_unchanged" from final output
     '''         
     mat = sem_dict['mat']
-    baseline = sem_dict['baseline']
-    sem_filename = sem_dict['filename']
+    baseline = sem_dict['baseline']]
     fasta = Fasta(assembly)
     
     with open(variants_file) as f, open(os.path.join(output_dir, f'{tf_name}_SEM_predictions.tsv'), 'w+') as output:
@@ -63,7 +62,7 @@ def run_annotation(tf_name, sem_dict, variants_file, output_dir, assembly, only_
                             f"#AssayContext: ChIP-seq\n",
                             f"#Model: SEMpl_v1.0.0\n"
                             ])
-        colnames = '\t'.join(['chr', 'pos', 'spdi', 'ref', 'alt', 'ref_seq_context', 'alt_seq_context', 'ref_score', 'alt_score', 'variant_effect_score', 'pvalue', 'SEMpl.annotation', 'SEMpl.baseline', 'SEMpl.SEM_filename'])
+        colnames = '\t'.join(['chr', 'pos', 'spdi', 'ref', 'alt', 'ref_seq_context', 'alt_seq_context', 'ref_score', 'alt_score', 'variant_effect_score', 'pvalue', 'SEMpl.annotation', 'SEMpl.baseline'])
         output.write(f'{colnames}\n')
 
         for line in f:
@@ -103,7 +102,7 @@ def run_annotation(tf_name, sem_dict, variants_file, output_dir, assembly, only_
             
             # Write to output file
             # spdi = get_spdi(CHR_REFSEQ_DICT, chrom, pos-1, ref, alt) SPDI given in input VCF
-            variant_output = '\t'.join([chrom, str(pos), var_id, ref, alt, ref_seq_context, alt_seq_context, str(ref_score), str(alt_score), str(annot_score), 'N/A', annot, str(baseline), sem_filename])     
+            variant_output = '\t'.join([chrom, str(pos), var_id, ref, alt, ref_seq_context, alt_seq_context, str(ref_score), str(alt_score), str(annot_score), 'N/A', annot, str(baseline)])     
             output.write(f'{variant_output}\n')
 
 if __name__ == "__main__":
