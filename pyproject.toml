@@ -1,0 +1,30 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "semvar-annot"
+version = "0.0.1"
+authors = [
+  { name="Rintsen Sherpa", email="rintsen@umich.edu" },
+]
+description = "Package for scoring and annotating variants with SNP Effect Matrices"
+dependencies = [
+    "pyfaidx>=0.7.2",
+    "numpy>=1.20.10",
+]
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+license = "MIT"
+license-files = ["LICEN[CS]E*"]
+
+[project.scripts]
+semvar-cli = "semvar:main"
+
+[project.urls]
+Homepage = "https://github.com/rnsherpa/SEMVAR"
+Issues = "https://github.com/rnsherpa/SEMVAR/issues"
