@@ -10,3 +10,6 @@ data/BASELINE/SEMs_baselines.txt
 *.out
 
 *.ipynb
+
+*.log
+y2ave*
