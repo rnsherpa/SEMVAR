@@ -104,8 +104,7 @@ def run_annotation(tf_name, sem_dict, variants_file, output_dir, assembly, only_
             variant_output = '\t'.join([chrom, str(pos), var_id, ref, alt, ref_seq_context, alt_seq_context, str(ref_score), str(alt_score), str(annot_score), 'N/A', annot, str(baseline)])     
             output.write(f'{variant_output}\n')
 
-if __name__ == "__main__":
-
+def main():
     parser = ArgumentParser(prog='SEM_variant_annotator')
     parser.add_argument('--file', '-f', help='Input variant list', required=True)
     parser.add_argument('--semsdir', '-d', help='Path to directory containing SEMs', required=True)
@@ -130,4 +129,6 @@ if __name__ == "__main__":
     # Run annotation with multiprocessing
     with Pool(n_processes) as pool:
         pool.starmap(run_annotation, zip(tf_name_list, sems_dict_list, repeat(variants_file), repeat(output_dir), repeat(assembly), repeat(args.only_report_effects)))
-        
+            
+if __name__ == "__main__":
+    main()
