@@ -92,13 +92,12 @@ def run_annotation(tf_name, sem_dict, variants_file, output_dir, assembly, only_
             ref_score, ref_score_idx = get_best_sem_score(ref_seq, mat)
             alt_score, alt_score_idx = get_best_sem_score(alt_seq, mat)
             annot, annot_score = annotate_variant(ref_score, alt_score, baseline)
+            if (only_report_effects == True) and (annot in ["no_binding", "binding_unchanged"]):
+                continue
             ref_score = 2**ref_score # unlog
             alt_score = 2**alt_score
             ref_seq_context = get_seq_context(ref_score_idx, chrom, pos, sem_len)
             alt_seq_context = get_seq_context(alt_score_idx, chrom, pos, sem_len)
-            
-            if (only_report_effects == True) and (annot in ["no_binding", "binding_unchanged"]):
-                continue
             
             # Write to output file
             # spdi = get_spdi(CHR_REFSEQ_DICT, chrom, pos-1, ref, alt) SPDI given in input VCF
