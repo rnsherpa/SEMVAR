@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "semvar-annot"
+name = "semvar"
 version = "0.0.1"
 authors = [
   { name="Rintsen Sherpa", email="rintsen@umich.edu" },
@@ -23,7 +23,7 @@ license = "MIT"
 license-files = ["LICEN[CS]E*"]
 
 [project.scripts]
-semvar-cli = "semvar:main"
+semvar = "semvar.semvar:main"
 
 [project.urls]
 Homepage = "https://github.com/rnsherpa/SEMVAR"
